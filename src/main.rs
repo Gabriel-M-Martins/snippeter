@@ -22,7 +22,13 @@ fn main() {
 
     let filebase: Filebase;
     match PathBuf::from_str(filebase_path.as_str()) {
-        Ok(path) => filebase = Filebase::load(path),
+        Ok(path) => match Filebase::load(path) {
+            Ok(value) => filebase = value,
+            Err(e) => {
+                // TODO: avisar que não conseguiu carregar o snippeter e perguntar se deveria criar um novo
+                todo!()
+            }
+        },
         Err(e) => {
             // TODO: (tentar) usar um caminho default
             todo!()
