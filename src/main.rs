@@ -1,45 +1,49 @@
 #![allow(unused)]
 
-use std::{path::PathBuf, str::FromStr};
+use std::{path::PathBuf, str::FromStr, env, io};
 
 use filebase::Filebase;
 use snippet::Snippet;
+
+use dotenvy::dotenv;
 
 mod filebase;
 mod snippet;
 
 fn main() {
-    dotenv::dotenv().ok();
-    let mut vars = dotenv::vars();
+    dotenv().ok();
 
-    let filebase_path: String;
-    match vars.find(|(key, value)| key == "FILEBASE_PATH") {
-        Some((_, value)) => filebase_path = value,
+    let mut filebase_path: PathBuf;
+    
+    match dotenvy::vars().find(|(key, _)| key == "FILEBASE_PATH") {
+        Some((_, value)) => {
+            match PathBuf::from_str(&value) {
+                Ok(v) => filebase_path = v,
+                Err(_) => filebase_path = default_path().unwrap()
+            }
+        }
         None => {
-            // todo: (tentar) usar um caminho default. por enquanto é hardcoded
-            
-            filebase_path = String::from("C:\\Users\\Gabriel\\Documents\\snippets");
+            filebase_path = default_path().unwrap();
         }
     }
 
-    let mut filebase: Filebase;
-    match PathBuf::from_str(filebase_path.as_str()) {
-        Ok(mut path) => {
-            path.push("snippets.snp");
-            match Filebase::load(&path) {
-                Ok(value) => {
-                    filebase = value.unwrap_or_default();
-                }
-                Err(e) => {
-                    // todo: avisar que não conseguiu carregar o snippeter e perguntar se deveria criar um novo
-                    todo!()
-                }
-            }
+    let mut filebase = Filebase::load(&filebase_path).unwrap_or_default();
+    
+    // match filebase.search("comp") {
+    //     Some(v) => for i in v { println!("{}: {} \n\t {}", i.name, i.desc.unwrap(), i.value)},
+    //     None => println!("nada")
+    // }
+
+    // filebase.save(&mut filebase_path);
+
+}
+
+fn default_path() -> io::Result<PathBuf> {
+    match dirs::document_dir() {
+        Some(mut p) => {
+            p.push("snippets1/snippets.snp");
+            Ok(p)
         },
-            
-        Err(e) => {
-            // todo: (tentar) usar um caminho default
-            todo!()
-        }
+        None => Err(io::Error::new(io::ErrorKind::NotFound, "There is something wrong with .env 'FILEBASE_PATH' and can't find default document directory."))
     }
 }

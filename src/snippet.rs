@@ -10,15 +10,6 @@ pub struct Snippet {
 }
 
 impl Snippet {
-    pub fn default() -> Self {
-        Snippet {
-            name: String::new(),
-            desc: None,
-            value: String::new(),
-            times_used: 0,
-        }
-    }
-
     pub fn name(&mut self, name: impl Into<String>) -> Self {
         self.name = name.into();
         self.to_owned()
@@ -32,6 +23,17 @@ impl Snippet {
     pub fn value(&mut self, value: impl Into<String>) -> Self {
         self.value = value.into();
         self.to_owned()
+    }
+}
+
+impl Default for Snippet {
+    fn default() -> Self {
+        Snippet {
+            name: String::new(),
+            desc: None,
+            value: String::new(),
+            times_used: 0,
+        }
     }
 }
 

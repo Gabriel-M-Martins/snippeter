@@ -18,14 +18,14 @@ impl Default for Filebase {
 }
 
 impl Filebase {
-    pub fn load(path: &PathBuf) -> Result<Option<Self>, io::Error> {
+    pub fn load(path: &PathBuf) -> Result<Self, io::Error> {
         match fs::read(path) {
             Ok(mut file_data) => {
                 let filebase: Result<Filebase, Box<bincode::ErrorKind>> =
                     bincode::deserialize(&file_data);
 
                 match filebase {
-                    Ok(filebase) => return Ok(Some(filebase)),
+                    Ok(filebase) => return Ok(filebase),
                     Err(e) => {
                         // todo: retornar que nao conseguiu deserializar o filebase
                         todo!()
@@ -36,15 +36,17 @@ impl Filebase {
                 // todo: retornar que nao conseguiu ler o arquivo do filebase
                 
                 match e.kind() {
-                    io::ErrorKind::NotFound => { return Ok(None) }
+                    io::ErrorKind::NotFound => { return Ok(Filebase::default()) }
                     _ => { todo!() }
                 }
             }
         }
     }
 
-    pub fn save(&self, path: &PathBuf) -> Result<(), io::Error> {
-        if let Err(e) = fs::create_dir_all(path) {
+    pub fn save(&self, path: &mut PathBuf) -> Result<(), io::Error> {
+        let mut dir_path = path.clone();
+        dir_path.pop();
+        if let Err(e) = fs::create_dir_all(dir_path) {
             if e.kind() != io::ErrorKind::AlreadyExists {
                 return Err(e);
             }
@@ -63,7 +65,9 @@ impl Filebase {
     }
 
     pub fn search(&self, pattern: impl Into<String>) -> Option<Vec<Snippet>>{
-        let fuse = Fuse::default();
+        let mut fuse = Fuse::default();
+        fuse.threshold = 0.4;
+        
         let mut search_results = fuse.search_text_in_fuse_list(&pattern.into(), &self.snippets);
 
         if search_results.is_empty() {
