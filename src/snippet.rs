@@ -1,7 +1,7 @@
 use fuse_rust::{Fuseable, FuseProperty};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Snippet {
     pub name: String,
     pub desc: Option<String>,
@@ -10,23 +10,28 @@ pub struct Snippet {
 }
 
 impl Snippet {
-    pub fn new(name: String) -> Self {
+    pub fn default() -> Self {
         Snippet {
-            name,
+            name: String::new(),
             desc: None,
             value: String::new(),
             times_used: 0,
         }
     }
 
-    pub fn desc(&mut self, desc: impl Into<String>) -> &mut Self {
-        self.desc = Some(desc.into());
-        self
+    pub fn name(&mut self, name: impl Into<String>) -> Self {
+        self.name = name.into();
+        self.to_owned()
     }
 
-    pub fn value(&mut self, value: impl Into<String>) -> &mut Self {
+    pub fn desc(&mut self, desc: impl Into<String>) -> Self {
+        self.desc = Some(desc.into());
+        self.to_owned()
+    }
+
+    pub fn value(&mut self, value: impl Into<String>) -> Self {
         self.value = value.into();
-        self
+        self.to_owned()
     }
 }
 

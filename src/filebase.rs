@@ -1,5 +1,6 @@
 use std::{fs, io, path::PathBuf};
 
+use fuse_rust::Fuse;
 use serde::{Deserialize, Serialize};
 
 use crate::snippet::Snippet;
@@ -10,24 +11,34 @@ pub struct Filebase {
     size: u32,
 }
 
+impl Default for Filebase {
+    fn default() -> Self {
+        Filebase { snippets: vec![], size: 0 }
+    }
+}
+
 impl Filebase {
-    pub fn load(mut path: &PathBuf) -> Result<Self, io::Error> {
+    pub fn load(path: &PathBuf) -> Result<Option<Self>, io::Error> {
         match fs::read(path) {
             Ok(mut file_data) => {
                 let filebase: Result<Filebase, Box<bincode::ErrorKind>> =
                     bincode::deserialize(&file_data);
 
                 match filebase {
-                    Ok(filebase) => return Ok(filebase),
+                    Ok(filebase) => return Ok(Some(filebase)),
                     Err(e) => {
-                        // TODO: retornar que nao conseguiu deserializar o filebase
+                        // todo: retornar que nao conseguiu deserializar o filebase
                         todo!()
                     }
                 }
             }
             Err(e) => {
-                // TODO: retornar que nao conseguiu ler o arquivo do filebase
-                todo!()
+                // todo: retornar que nao conseguiu ler o arquivo do filebase
+                
+                match e.kind() {
+                    io::ErrorKind::NotFound => { return Ok(None) }
+                    _ => { todo!() }
+                }
             }
         }
     }
@@ -45,15 +56,32 @@ impl Filebase {
                 return fs::write(path, data);
             }
             Err(e) => {
-                // TODO: retornar erro de serialização dos dados
+                // todo: retornar erro de serialização dos dados
                 todo!()
             }
         }
-        
-        todo!()
     }
 
     pub fn search(&self, pattern: impl Into<String>) -> Option<Vec<Snippet>>{
-        todo!()
+        let fuse = Fuse::default();
+        let mut search_results = fuse.search_text_in_fuse_list(&pattern.into(), &self.snippets);
+
+        if search_results.is_empty() {
+            return None;
+        }
+
+        let mut output: Vec<Snippet> = vec![];
+        search_results.sort_unstable_by(|a,b| a.score.total_cmp(&b.score));
+        
+        for i in search_results {
+            output.push(self.snippets[i.index].clone());
+        }
+
+        Some(output)
+    }
+
+    pub fn add_snippet(&mut self, snippet: Snippet) {
+        self.snippets.push(snippet);
+        self.size += 1;
     }
 }
