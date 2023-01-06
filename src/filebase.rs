@@ -9,13 +9,12 @@ use snippeter::find_path;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Filebase {
     snippets: Vec<Snippet>,
-    size: u32,
     path: PathBuf
 }
 
 impl Default for Filebase {
     fn default() -> Self {
-        Filebase { snippets: vec![], size: 0, path: find_path()}
+        Filebase { snippets: vec![], path: find_path()}
     }
 }
 
@@ -90,8 +89,8 @@ impl Filebase {
         Some(output)
     }
 
-    pub fn add_snippet(&mut self, snippet: Snippet) {
+    pub fn add_snippet(&mut self, mut snippet: Snippet) {
+        snippet.id = (self.snippets.len() + 1) as u32;
         self.snippets.push(snippet);
-        self.size += 1;
     }
 }

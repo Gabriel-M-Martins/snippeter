@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Snippet {
+    pub id: u32,
     pub name: String,
     pub desc: Option<String>,
     pub value: String,
@@ -29,6 +30,7 @@ impl Snippet {
 impl Default for Snippet {
     fn default() -> Self {
         Snippet {
+            id: 0,
             name: String::new(),
             desc: None,
             value: String::new(),

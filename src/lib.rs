@@ -25,7 +25,7 @@ pub fn find_path() -> PathBuf {
 fn default_path() -> io::Result<PathBuf> {
     match dirs::document_dir() {
         Some(mut p) => {
-            p.push("snippets1/snippets.snp");
+            p.push("snippets/snippets.snp");
             Ok(p)
         },
         None => Err(io::Error::new(io::ErrorKind::NotFound, "There is something wrong with .env 'FILEBASE_PATH' and can't find default document directory."))
